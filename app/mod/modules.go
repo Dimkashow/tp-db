@@ -1,4 +1,4 @@
-package main
+package mod
 
 import (
 	"time"
@@ -34,6 +34,9 @@ type Thread struct {
 	Title        string    `json:"title"`
 	Votes        int64     `json:"votes"`
 }
+
+//easyjson:json
+type EzPost []*Post
 
 type Post struct {
 	Author       string    `json:"author"`

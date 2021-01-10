@@ -5,6 +5,7 @@ import (
 	_ "fmt"
 	"github.com/gorilla/mux"
 	_ "io/ioutil"
+	"main/app/mod"
 	"net/http"
 	"strconv"
 )
@@ -12,20 +13,20 @@ import (
 func createThread(w http.ResponseWriter, r *http.Request) {
 	slug, er := mux.Vars(r)["slug"]
 	if er {}
-	buf := &Thread{}
+	buf := &mod.Thread{}
 	err := json.NewDecoder(r.Body).Decode(&buf)
 	if err != nil {}
 
 	user, err := GetUserByNicknameDB((*buf).Author)
 	if err != nil {
-		var message = Mes{Message: "Can't find user with id #" + (*buf).Author + "\n"}
+		var message = mod.Mes{Message: "Can't find user with id #" + (*buf).Author + "\n"}
 		WriteJson(w, message, http.StatusNotFound)
 		return
 	}
 
 	forum, err := GetForumDB(slug)
 	if err != nil {
-		var message = Mes{Message: "Can't find user with id #" + slug + "\n"}
+		var message = mod.Mes{Message: "Can't find user with id #" + slug + "\n"}
 		WriteJson(w, message, http.StatusNotFound)
 		return
 	}
@@ -56,7 +57,7 @@ func getThread(w http.ResponseWriter, r *http.Request) {
 
 	forum, err := GetForumDB(slug)
 	if err != nil {
-		var message = Mes{Message: "Can't find user with id #" + slug + "\n"}
+		var message = mod.Mes{Message: "Can't find user with id #" + slug + "\n"}
 		WriteJson(w, message, http.StatusNotFound)
 		return
 	}
@@ -79,7 +80,7 @@ func getThreadSimple(w http.ResponseWriter, r *http.Request) {
 		or_id, _ := strconv.Atoi(slug_or_id)
 		thread, err = getThreadByIDDB(uint64(or_id))
 		if err != nil {
-			var message = Mes{Message: "Can't find user with id #" + slug_or_id + "\n"}
+			var message = mod.Mes{Message: "Can't find user with id #" + slug_or_id + "\n"}
 			WriteJson(w, message, http.StatusNotFound)
 			return
 		}
@@ -95,13 +96,13 @@ func editThread(w http.ResponseWriter, r *http.Request) {
 		or_id, _ := strconv.Atoi(slug_or_id)
 		thread, err = getThreadByIDDB(uint64(or_id))
 		if err != nil {
-			var message = Mes{Message: "Can't find user with id #" + slug_or_id + "\n"}
+			var message = mod.Mes{Message: "Can't find user with id #" + slug_or_id + "\n"}
 			WriteJson(w, message, http.StatusNotFound)
 			return
 		}
 	}
 
-	buf := &Thread{}
+	buf := &mod.Thread{}
 	err = json.NewDecoder(r.Body).Decode(&buf)
 	if err != nil {}
 

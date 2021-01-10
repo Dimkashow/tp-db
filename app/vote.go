@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"github.com/gorilla/mux"
+	"main/app/mod"
 	"net/http"
 	"strconv"
 )
@@ -10,7 +11,7 @@ import (
 func userVote(w http.ResponseWriter, r *http.Request) {
 	slug_or_id, _ := mux.Vars(r)["slug_or_id"]
 
-	buf := &Vote{}
+	buf := &mod.Vote{}
 
 	err := json.NewDecoder(r.Body).Decode(&buf)
 	if err != nil {}
@@ -20,7 +21,7 @@ func userVote(w http.ResponseWriter, r *http.Request) {
 		or_id, _ := strconv.Atoi(slug_or_id)
 		thread, err = getThreadByIDDB(uint64(or_id))
 		if err != nil {
-			var message = Mes{Message: "Can't find user with id #" + slug_or_id + "\n"}
+			var message = mod.Mes{Message: "Can't find user with id #" + slug_or_id + "\n"}
 			WriteJson(w, message, http.StatusNotFound)
 			return
 		}
@@ -28,7 +29,7 @@ func userVote(w http.ResponseWriter, r *http.Request) {
 
 	user, err := GetUserByNicknameDB((*buf).Nickname)
 	if err != nil {
-		var message = Mes{Message: "Can't find user with id #" + (*buf).Nickname + "\n"}
+		var message = mod.Mes{Message: "Can't find user with id #" + (*buf).Nickname + "\n"}
 		WriteJson(w, message, http.StatusNotFound)
 		return
 	}

@@ -5,7 +5,9 @@ import (
 	_ "fmt"
 	"github.com/gorilla/mux"
 	_ "github.com/gorilla/mux"
+	"github.com/mailru/easyjson"
 	_ "io/ioutil"
+	"main/app/mod"
 	"net/http"
 	"strconv"
 	_ "strconv"
@@ -14,8 +16,8 @@ import (
 )
 
 func createPost(w http.ResponseWriter, r *http.Request) {
-	buf := []*Post{}
-	err := json.NewDecoder(r.Body).Decode(&buf)
+	buf := mod.EzPost{}
+	err := easyjson.UnmarshalFromReader(r.Body, &buf)
 	if err != nil {}
 
 	slug_or_id, _ := mux.Vars(r)["slug_or_id"]
@@ -24,7 +26,7 @@ func createPost(w http.ResponseWriter, r *http.Request) {
 		or_id, _ := strconv.Atoi(slug_or_id)
 		thread, err = getThreadByIDDB(uint64(or_id))
 		if err != nil {
-			var message = Mes{Message: "err 1 #" + slug_or_id + "\n"}
+			var message = mod.Mes{Message: "err 1 #" + slug_or_id + "\n"}
 			WriteJson(w, message, http.StatusNotFound)
 			return
 		}
@@ -43,13 +45,13 @@ func createPost(w http.ResponseWriter, r *http.Request) {
 			//CREATE NEW FUNC WHERE BOOL, ID
 			parentThread, err := getPostParentDB((*(buf)[id]).ParentID)
 			if err != nil {
-				var message = Mes{Message: "err 2 #" + (*(buf)[id]).Author + "\n"}
+				var message = mod.Mes{Message: "err 2 #" + (*(buf)[id]).Author + "\n"}
 				WriteJson(w, message, http.StatusConflict)
 				return
 			}
 
 			if parentThread != thread.ID {
-				var message = Mes{Message: "err 3 #" + (*(buf)[id]).Author + "\n"}
+				var message = mod.Mes{Message: "err 3 #" + (*(buf)[id]).Author + "\n"}
 				WriteJson(w, message, http.StatusConflict)
 				return
 			}
@@ -57,7 +59,7 @@ func createPost(w http.ResponseWriter, r *http.Request) {
 
 		user, err := GetUserByNicknameDB((*(buf)[id]).Author)
 		if err != nil {
-			var message = Mes{Message: "err 4 #" + (*(buf)[id]).Author + "\n"}
+			var message = mod.Mes{Message: "err 4 #" + (*(buf)[id]).Author + "\n"}
 			WriteJson(w, message, http.StatusNotFound)
 			return
 		}
@@ -73,12 +75,16 @@ func createPost(w http.ResponseWriter, r *http.Request) {
 		NewUserOnForum((*(buf)[id]).AuthorID, (*(buf)[id]).ForumID)
 	}*/
 
-	buf, err = AddPostsDB(buf)
+	new_buf, err := AddPostsDB(&buf)
 
 	//forum, err := GetForumDB(thread.Forum)
 	//AddPostToForum(thread.ForumID, (*forum).PostsCount + uint64(len(buf)))
 
-	WriteJson(w, buf, http.StatusCreated)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	easyjson.MarshalToHTTPResponseWriter(*new_buf, w)
+
+	//WriteJson(w, *new_buf, http.StatusCreated)
 }
 
 func getPostFlat(w http.ResponseWriter, r *http.Request) {
@@ -89,7 +95,7 @@ func getPostFlat(w http.ResponseWriter, r *http.Request) {
 		or_id, _ := strconv.Atoi(slug_or_id)
 		thread, err = getThreadByIDDB(uint64(or_id))
 		if err != nil {
-			var message = Mes{Message: "Can't find user with id #" + slug_or_id + "\n"}
+			var message = mod.Mes{Message: "Can't find user with id #" + slug_or_id + "\n"}
 			WriteJson(w, message, http.StatusNotFound)
 			return
 		}
@@ -117,7 +123,7 @@ func getPostTree(w http.ResponseWriter, r *http.Request) {
 		or_id, _ := strconv.Atoi(slug_or_id)
 		thread, err = getThreadByIDDB(uint64(or_id))
 		if err != nil {
-			var message = Mes{Message: "Can't find user with id #" + slug_or_id + "\n"}
+			var message = mod.Mes{Message: "Can't find user with id #" + slug_or_id + "\n"}
 			WriteJson(w, message, http.StatusNotFound)
 			return
 		}
@@ -145,7 +151,7 @@ func getPostParentTree(w http.ResponseWriter, r *http.Request) {
 		or_id, _ := strconv.Atoi(slug_or_id)
 		thread, err = getThreadByIDDB(uint64(or_id))
 		if err != nil {
-			var message = Mes{Message: "Can't find user with id #" + slug_or_id + "\n"}
+			var message = mod.Mes{Message: "Can't find user with id #" + slug_or_id + "\n"}
 			WriteJson(w, message, http.StatusNotFound)
 			return
 		}
@@ -181,11 +187,11 @@ func getPost(w http.ResponseWriter, r *http.Request) {
 	id, _ := strconv.Atoi(mux.Vars(r)["id"])
 	post, err := getPostDB(uint64(id))
 	if err != nil {
-		var message = Mes{Message: "Can't find user with id #" + "\n"}
+		var message = mod.Mes{Message: "Can't find user with id #" + "\n"}
 		WriteJson(w, message, http.StatusNotFound)
 		return
 	}
-	var result PostFull
+	var result mod.PostFull
 	result.PostData = post
 
 	buf := strings.Split(r.URL.Query().Get("related"), ",")
@@ -194,7 +200,7 @@ func getPost(w http.ResponseWriter, r *http.Request) {
 		if val == "user" {
 			user, err := GetUserByNicknameDB((*post).Author)
 			if err != nil {
-				var message = Mes{Message: "Can't find user with id #" + "\n"}
+				var message = mod.Mes{Message: "Can't find user with id #" + "\n"}
 				WriteJson(w, message, http.StatusNotFound)
 				return
 			}
@@ -202,7 +208,7 @@ func getPost(w http.ResponseWriter, r *http.Request) {
 		} else if val == "forum" {
 			forum, err := GetForumDB((*post).Forum)
 			if err != nil {
-				var message = Mes{Message: "Can't find user with id #" + "\n"}
+				var message = mod.Mes{Message: "Can't find user with id #" + "\n"}
 				WriteJson(w, message, http.StatusNotFound)
 				return
 			}
@@ -210,7 +216,7 @@ func getPost(w http.ResponseWriter, r *http.Request) {
 		} else if val == "thread" {
 			thread, err := getThreadByIDDB((*post).ThreadID)
 			if err != nil {
-				var message = Mes{Message: "Can't find user with id #" + "\n"}
+				var message = mod.Mes{Message: "Can't find user with id #" + "\n"}
 				WriteJson(w, message, http.StatusNotFound)
 				return
 			}
@@ -225,12 +231,12 @@ func editPost(w http.ResponseWriter, r *http.Request) {
 	id, _ := strconv.Atoi(mux.Vars(r)["id"])
 	post, err := getPostDB(uint64(id))
 	if err != nil {
-		var message = Mes{Message: "Can't find user with id #" + "\n"}
+		var message = mod.Mes{Message: "Can't find user with id #" + "\n"}
 		WriteJson(w, message, http.StatusNotFound)
 		return
 	}
 
-	buf := &Mes{}
+	buf := &mod.Mes{}
 	err = json.NewDecoder(r.Body).Decode(&buf)
 
 	if (*buf).Message != "" && (*buf).Message != (*post).Message {

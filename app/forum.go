@@ -5,18 +5,19 @@ import (
 	"github.com/gorilla/mux"
 	_ "github.com/gorilla/mux"
 	_ "io/ioutil"
+	"main/app/mod"
 	"net/http"
 	"strconv"
 )
 
 func createForum(w http.ResponseWriter, r *http.Request) {
-	buf := &Forum{}
+	buf := &mod.Forum{}
 	err := json.NewDecoder(r.Body).Decode(&buf)
 	if err != nil {}
 
 	user, err := GetUserByNicknameDB((*buf).AdminNickname)
 	if err != nil {
-		var message = Mes{Message: "Can't find user with id #" + (*buf).AdminNickname + "\n"}
+		var message = mod.Mes{Message: "Can't find user with id #" + (*buf).AdminNickname + "\n"}
 		WriteJson(w, message, http.StatusNotFound)
 		return
 	}
@@ -40,7 +41,7 @@ func getForum(w http.ResponseWriter, r *http.Request) {
 
 	forum, err := GetForumDB(slug)
 	if err != nil {
-		var message = Mes{Message: "Can't find user with id #" + slug + "\n"}
+		var message = mod.Mes{Message: "Can't find user with id #" + slug + "\n"}
 		WriteJson(w, message, http.StatusNotFound)
 		return
 	}
@@ -53,7 +54,7 @@ func getForumUser(w http.ResponseWriter, r *http.Request) {
 
 	forum, err := GetForumDB(slug)
 	if err != nil {
-		var message = Mes{Message: "Can't find user with id #" + slug + "\n"}
+		var message = mod.Mes{Message: "Can't find user with id #" + slug + "\n"}
 		WriteJson(w, message, http.StatusNotFound)
 		return
 	}

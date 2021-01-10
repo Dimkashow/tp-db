@@ -3,21 +3,22 @@ package main
 import (
 	"encoding/json"
 	"github.com/gorilla/mux"
+	"main/app/mod"
 	"net/http"
 	"strings"
 )
 
 func createUser(w http.ResponseWriter, r *http.Request) {
-	buf := &User{}
+	buf := &mod.User{}
 	err := json.NewDecoder(r.Body).Decode(&buf)
 	if err != nil {}
 	nickname, er := mux.Vars(r)["nickname"]
 	if er {}
 	(*buf).Nickname = nickname
 
-	old0 := &User{}
-	old1 := &User{}
-	var UserOld []*User
+	old0 := &mod.User{}
+	old1 := &mod.User{}
+	var UserOld []*mod.User
 
 	old0, err = GetUserByNicknameDB((*buf).Nickname)
 	if err == nil {
@@ -50,7 +51,7 @@ func getUser(w http.ResponseWriter, r *http.Request) {
 
 	user, err := GetUserByNicknameDB(nickname)
 	if err != nil {
-		var message = Mes{Message: "Can't find user with id #" + nickname + "\n"}
+		var message = mod.Mes{Message: "Can't find user with id #" + nickname + "\n"}
 		WriteJson(w, message, http.StatusNotFound)
 		return
 	}
@@ -58,19 +59,19 @@ func getUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func editUser(w http.ResponseWriter, r *http.Request) {
-	buf := &User{}
+	buf := &mod.User{}
 	err := json.NewDecoder(r.Body).Decode(&buf)
 	if err != nil {}
 	nickname, er := mux.Vars(r)["nickname"]
 	if er {}
 	(*buf).Nickname = nickname
 
-	user := &User{}
-	old1 := &User{}
+	user := &mod.User{}
+	old1 := &mod.User{}
 
 	user, err = GetUserByNicknameDB((*buf).Nickname)
 	if err != nil {
-		var message = Mes{Message: "Can't find user with id #" + nickname + "\n"}
+		var message = mod.Mes{Message: "Can't find user with id #" + nickname + "\n"}
 		WriteJson(w, message, http.StatusNotFound)
 		return
 	}
@@ -78,7 +79,7 @@ func editUser(w http.ResponseWriter, r *http.Request) {
 	old1, err = GetUserByEmailDB((*buf).Email)
 	if err == nil {
 		if strings.ToLower((*old1).Nickname) != strings.ToLower((*buf).Nickname) {
-			var message = Mes{Message: "Can't find user with id #" + nickname + "\n"}
+			var message = mod.Mes{Message: "Can't find user with id #" + nickname + "\n"}
 			WriteJson(w, message, http.StatusConflict)
 			return
 		}
