@@ -1,12 +1,19 @@
-FROM golang:1.14-stretch AS build
+FROM golang:1.15 AS build
+
 ADD ./ /opt/build/golang
 WORKDIR /opt/build/golang
 RUN go install ./app
-FROM ubuntu:18.04 AS release
+
+FROM ubuntu:20.04 AS release
 
 MAINTAINER Dmitry Kovalev
 
-ENV PGVER 10
+RUN apt-get -y update && apt-get install -y tzdata
+
+ENV TZ=Russia/Moscow
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
+ENV PGVER 12
 RUN apt -y update && apt install -y postgresql-$PGVER
 
 USER postgres
